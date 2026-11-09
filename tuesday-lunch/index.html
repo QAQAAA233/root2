@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FFF8F2">
+  <title>🍙 週二午餐時光｜可愛互動電子白板</title>
+  <style>
+    :root {
+      --ink: #494050;
+      --ink-soft: #827785;
+      --rose: #ef7d9b;
+      --rose-dark: #d96586;
+      --peach: #ffded1;
+      --cream: #fffaf4;
+      --mint: #d5f4e9;
+      --mint-deep: #67bca8;
+      --lavender: #e6ddff;
+      --yellow: #ffeab2;
+      --line: #f4e8e5;
+      --shadow: 0 16px 45px rgba(144, 91, 110, .10), 0 3px 10px rgba(144, 91, 110, .04);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 5% 8%, rgba(255, 194, 205, .47) 0 9%, transparent 26%),
+        radial-gradient(circle at 98% 7%, rgba(226, 211, 255, .55) 0 8%, transparent 28%),
+        radial-gradient(circle at 88% 91%, rgba(192, 240, 219, .40) 0 6%, transparent 24%),
+        #fff9f5;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+      background-image: radial-gradient(#edc8c5 1px, transparent 1px);
+      background-size: 26px 26px; opacity: .27;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #9d83e6; outline-offset: 3px; }
+    .page { width: min(1640px, calc(100% - 56px)); margin: 0 auto; padding: 30px 0 25px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+    .brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .logo {
+      width: 73px; height: 73px; display: grid; place-items: center; flex: 0 0 auto;
+      background: #fff; border: 3px solid #fff; border-radius: 23px; box-shadow: var(--shadow);
+      font-size: 37px; transform: rotate(-7deg);
+    }
+    .eyebrow { color: var(--rose-dark); font-size: clamp(13px, 1.1vw, 17px); letter-spacing: 3px; font-weight: 900; }
+    h1 { margin: 1px 0 0; font-size: clamp(31px, 3vw, 49px); letter-spacing: 3px; line-height: 1.2; }
+    .top-controls { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; justify-content: end; }
+    .date-badge, .btn {
+      background: rgba(255,255,255,.9); border: 2px solid #fff; color: var(--ink);
+      box-shadow: 0 5px 16px rgba(119, 72, 88, .07); border-radius: 999px; padding: 12px 19px;
+      font-size: 16px; font-weight: 850; white-space: nowrap;
+    }
+    .date-badge { background: #fef1de; color: #a56f51; }
+    .btn { transition: transform .16s, background .16s; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn.sound-ready { background: var(--mint); border-color: #a5e8d0; color: #277c68; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(390px, .87fr); align-items: stretch; gap: 24px; }
+    .left-column { display: flex; flex-direction: column; gap: 23px; }
+    .card { background: rgba(255,255,255,.93); border: 2px solid rgba(255,255,255,.95); border-radius: 34px; box-shadow: var(--shadow); }
+    .clock-card { position: relative; isolation: isolate; overflow: hidden; padding: 32px 37px 30px; min-height: 405px; display: flex; flex-direction: column; justify-content: space-between; }
+    .clock-card::before { content:""; position:absolute; width: 340px; height: 340px; right:-145px; top:-140px; border-radius: 50%; background: #fff1e9; z-index:-1; }
+    .clock-card::after { content:""; position:absolute; width: 230px; height: 230px; right:90px; bottom:-158px; border-radius: 50%; background: #fbf4ff; z-index:-1; }
+    .clock-intro { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .small-label { margin: 0 0 7px; color: var(--rose-dark); font-size: clamp(17px, 1.35vw, 22px); font-weight: 900; letter-spacing: 1px; }
+    .clock-subtitle { margin: 0; font-size: clamp(13px, 1.13vw, 18px); font-weight: 650; color: var(--ink-soft); }
+    .mascot { width: clamp(155px, 14vw, 225px); flex: 0 0 auto; margin-top: -24px; margin-right: -14px; filter: drop-shadow(0 12px 13px rgba(215, 149, 139, .13)); animation: float 4s ease-in-out infinite; }
+    @keyframes float { 50% { transform: translateY(-9px) rotate(2deg); } }
+    .time-area { margin-top: -10px; }
+    .time { font-size: clamp(76px, 7.4vw, 137px); line-height: 1.08; font-weight: 950; letter-spacing: 1px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .time .colon { color: var(--rose); animation: blink 1s steps(1, end) infinite; }
+    @keyframes blink { 50% { opacity: .38; } }
+    .seconds { font-size: .43em; letter-spacing: 0; color: #aa9cac; vertical-align: 10%; }
+    .status-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 13px; margin-top: 10px; }
+    .current-phase { display: inline-flex; align-items: center; padding: 9px 15px; gap: 7px; background: #fff1e6; border-radius: 999px; font-weight: 900; font-size: clamp(14px, 1vw, 17px); color: #ad6e58; }
+    .next-reminder { color: #8b818f; font-size: clamp(13px, .98vw, 16px); font-weight: 800; }
+    .next-reminder strong { color: var(--rose-dark); font-variant-numeric: tabular-nums; }
+    .progress-area { margin-top: 23px; }
+    .progress-labels { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; color: #8e7e86; font-weight: 850; margin-bottom: 9px; }
+    .progress-track { background: #f7eff0; height: 18px; overflow: hidden; border-radius: 99px; box-shadow: inset 0 2px 5px #eadad7; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb5ac, #f38ca6 62%, #d2b6f7); border-radius: 99px; transition: width 1s linear; position: relative; }
+    .progress-fill::after { content: "✦"; position: absolute; right: 7px; top: -4px; color: #fff; font-size: 20px; }
+    .alarm-section { padding: 25px 27px 28px; flex: 1; }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .section-heading h2 { margin: 0; font-size: clamp(22px, 1.8vw, 29px); letter-spacing: 1px; }
+    .section-desc { font-size: 13px; color: #9c8e9d; font-weight: 750; }
+    .alarm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+    .alarm-box { border-radius: 23px; padding: 20px 20px 17px; border: 2px solid transparent; position: relative; }
+    .alarm-box.one { background: #fff0f2; border-color: #ffe0e8; }
+    .alarm-box.two { background: #e9f9f3; border-color: #d3f4e7; }
+    .alarm-box.disabled { filter: grayscale(.65); opacity: .72; }
+    .alarm-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .alarm-name { font-size: clamp(14px, 1.15vw, 18px); font-weight: 950; }
+    .alarm-time { display: flex; align-items: center; gap: 11px; margin-top: 10px; }
+    .alarm-icon { font-size: clamp(28px, 2.6vw, 42px); }
+    .alarm-input { width: min(100%, 175px); min-width: 0; font-size: clamp(27px, 2.5vw, 42px); color: var(--ink); font-weight: 950; letter-spacing: -1px; background: transparent; border: none; border-bottom: 2px dashed rgba(143, 111, 125, .22); font-variant-numeric: tabular-nums; padding: 0 0 4px; }
+    .alarm-input::placeholder { color: #ac9da9; }
+    .alarm-note { margin: 8px 0 0; color: #837786; font-size: clamp(12px, .97vw, 15px); font-weight: 750; }
+    .switch { position: relative; display: inline-block; width: 57px; height: 32px; flex: 0 0 auto; }
+    .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+    .slider { display: block; width: 100%; height: 100%; border-radius: 99px; background: #cfc7cf; transition: background .2s; }
+    .slider::before { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; background: white; border-radius: 50%; box-shadow: 0 2px 5px #9e9e9e55; transition: transform .2s; }
+    .switch input:checked + .slider { background: #ef91a9; }
+    .alarm-box.two .switch input:checked + .slider { background: #69c7ac; }
+    .switch input:checked + .slider::before { transform: translateX(25px); }
+    .sound-tip { margin: 15px 2px 0; color: #8c7e86; font-size: clamp(12px, .92vw, 14px); line-height: 1.65; }
+    .timetable { padding: 29px 27px 22px; display: flex; flex-direction: column; min-width: 0; }
+    .timetable-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 5px 5px; }
+    .timetable-header h2 { margin: 0; font-size: clamp(25px, 2.1vw, 35px); letter-spacing: 1px; }
+    .timetable-header p { margin: 3px 0 0; font-size: 14px; color: var(--ink-soft); font-weight: 700; }
+    .edit-btn { border: 0; background: #f6efff; border-radius: 17px; padding: 12px 15px; color: #8471b1; font-weight: 900; white-space: nowrap; font-size: 14px; }
+    .edit-btn.editing { background: #e3f7ec; color: #3c9779; }
+    .schedule-list { display: flex; flex-direction: column; gap: 14px; flex: 1; margin-top: 24px; }
+    .schedule-row { display: flex; align-items: center; gap: 16px; position: relative; padding: 18px 15px; background: #fffaf5; border: 2px solid #fff2ea; border-radius: 23px; min-height: 112px; transition: background .2s, transform .2s, box-shadow .2s; }
+    .schedule-row:nth-child(2) { background: #fff6f8; border-color: #ffe9ee; }
+    .schedule-row:nth-child(3) { background: #f6f3ff; border-color: #ede6ff; }
+    .schedule-row:nth-child(4) { background: #f0faf5; border-color: #def6ea; }
+    .schedule-row.active { border-color: #f2a3b5; box-shadow: 0 0 0 4px rgba(245, 176, 192, .20); transform: translateX(-2px); }
+    .row-emoji { display: grid; place-items: center; width: 66px; height: 66px; background: #fff; border: 2px solid #fff; border-radius: 21px; font-size: 35px; flex: 0 0 auto; box-shadow: 0 4px 10px #a67f8a11; }
+    .row-detail { flex: 1; min-width: 0; }
+    .row-time { color: var(--rose-dark); font-size: clamp(14px, 1.1vw, 17px); font-weight: 950; font-variant-numeric: tabular-nums; letter-spacing: .2px; }
+    .row-title { margin: 3px 0 2px; font-size: clamp(18px, 1.37vw, 24px); font-weight: 950; line-height: 1.4; }
+    .row-desc { margin: 0; color: #938590; font-size: clamp(12px, .93vw, 15px); font-weight: 750; }
+    .now-tag { display: none; position: absolute; right: 12px; top: -11px; color: #fff; background: #e986a3; font-size: 12px; font-weight: 950; border-radius: 999px; padding: 4px 10px; box-shadow: 0 4px 10px #eaa1aa60; }
+    .schedule-row.active .now-tag { display: block; }
+    .edit-fields { display: none; }
+    .edit-mode .view-fields { display: none; }
+    .edit-mode .edit-fields { display: grid; gap: 7px; }
+    .edit-fields .times-edit { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .edit-fields input { width: 100%; min-width: 0; color: #615565; border: 1px solid #e6d9e1; border-radius: 9px; padding: 5px 7px; background: white; font-weight: 750; font-size: 14px; }
+    .edit-fields .times-edit input { width: 88px; max-width: 43%; font-variant-numeric: tabular-nums; }
+    .edit-mode .schedule-row { padding-top: 13px; padding-bottom: 13px; min-height: 150px; }
+    /* 所有活動文字都能直接點選編輯，不需要開啟設定視窗。 */
+    .inline-editable { border-radius: 7px; cursor: text; text-decoration: underline dotted rgba(231,130,159,.45) 2px; text-underline-offset: 5px; transition: background .18s, outline-color .18s; }
+    .inline-editable:hover { background: #fff1df; outline: 2px dashed #efc2b9; outline-offset: 4px; }
+    .inline-editable:focus { background: #fffbe9; outline: 3px solid #ed9bb4; outline-offset: 4px; text-decoration: none; }
+    .edit-hint { display: inline-flex; align-items: center; border-radius: 999px; background: #fff1df; color: #bd7381; padding: 5px 12px; font-size: 12px; font-weight: 850; }
+    .alarm-note { line-height: 1.55; min-height: 1.6em; }
+    .promise-text { white-space: normal; text-align: center; }
+    .bottom-banner .separate { user-select: none; }
+
+    .schedule-footer { margin-top: 19px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 18px; background: #fff6e5; color: #98734e; font-weight: 850; font-size: 14px; }
+    .reset-btn { background: transparent; border: 0; text-decoration: underline; font-size: 13px; font-weight: 850; color: #977b82; padding: 4px; }
+    .bottom-banner { margin-top: 22px; padding: 15px 24px; border-radius: 25px; background: linear-gradient(95deg, #fff0eb, #fff6df, #ecf8f0); border: 2px solid #fff; display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; font-size: clamp(14px, 1.15vw, 19px); font-weight: 900; box-shadow: 0 8px 24px rgba(173, 116, 115, .07); }
+    .bottom-banner b { color: #cd708b; }
+    .separate { opacity: .28; }
+    .overlay { display: none; position: fixed; inset: 0; z-index: 1000; align-items: center; justify-content: center; padding: 24px; background: rgba(65, 48, 70, .45); backdrop-filter: blur(8px); }
+    .overlay.show { display: flex; }
+    .popup { width: min(600px, 96vw); background: #fffdf9; border-radius: 40px; padding: 40px 36px 35px; text-align: center; border: 7px solid #ffe0ea; box-shadow: 0 30px 90px rgba(51,30,52,.2); animation: appear .37s cubic-bezier(.17, 1.3, .4, 1); }
+    .overlay.mint .popup { border-color: #bdeddb; }
+    @keyframes appear { from { transform: scale(.7) translateY(35px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+    .popup-icon { font-size: 99px; line-height: 1.15; animation: dance 1s ease-in-out infinite alternate; display: block; }
+    @keyframes dance { from { transform: rotate(-9deg) scale(.96); } to { transform: rotate(9deg) scale(1.06); } }
+    .popup-kicker { margin: 13px 0 4px; font-size: 19px; color: var(--rose-dark); font-weight: 950; }
+    .popup h2 { margin: 7px 0; font-size: clamp(37px, 5.5vw, 59px); }
+    .popup p { color: #7b6d7b; font-size: 22px; line-height: 1.7; font-weight: 850; }
+    .dismiss-btn { display: inline-flex; justify-content: center; align-items: center; width: min(360px,100%); background: #f18fa8; color: white; border: 0; border-radius: 18px; padding: 17px 24px; font-size: 23px; font-weight: 950; margin-top: 8px; box-shadow: 0 7px 0 #d77392; }
+    .overlay.mint .dismiss-btn { background: #6bc5a9; box-shadow: 0 7px 0 #43a98b; }
+    .dismiss-btn:active { transform: translateY(5px); box-shadow: 0 2px 0 #b77c8d; }
+    .toast { position: fixed; left: 50%; bottom: 25px; transform: translateX(-50%) translateY(30px); background: #504658; color: #fff; border-radius: 16px; padding: 12px 22px; font-weight: 800; box-shadow: 0 13px 35px #0002; opacity: 0; pointer-events: none; transition: .25s; z-index: 1100; max-width: 90%; text-align: center; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @media (max-width: 1130px) {
+      .layout { grid-template-columns: 1fr; }
+      .timetable { min-height: 0; }
+      .schedule-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .clock-card { min-height: 375px; }
+      .time { font-size: clamp(70px, 12vw, 130px); }
+      .topbar { flex-wrap: wrap; }
+    }
+    @media (max-width: 680px) {
+      .page { width: calc(100% - 25px); padding-top: 16px; }
+      .topbar { align-items: start; gap: 12px; }
+      .logo { width: 55px; height: 55px; font-size: 29px; border-radius: 16px; }
+      .top-controls { justify-content: start; }
+      .date-badge, .btn { font-size: 12px; padding: 8px 12px; }
+      .layout, .left-column { gap: 14px; }
+      .card { border-radius: 23px; }
+      .clock-card { min-height: 345px; padding: 24px 20px; }
+      .mascot { width: 135px; margin-right: -13px; margin-top: -18px; }
+      .time { font-size: clamp(55px, 12.5vw, 87px); }
+      .alarm-section, .timetable { padding: 20px 16px; }
+      .section-heading { flex-wrap: wrap; }
+      .section-heading h2 { white-space: nowrap; font-size: 22px; }
+      .section-desc { flex-basis: 100%; }
+      .alarm-name { font-size: 12px; white-space: nowrap; }
+      .alarm-grid { gap: 9px; }
+      .alarm-box { padding: 13px 10px; border-radius: 18px; }
+      .alarm-input { font-size: clamp(24px, 6vw, 37px); }
+      .alarm-icon { display: none; }
+      .alarm-note { font-size: 12px; }
+      .schedule-list { display: flex; gap: 11px; }
+      .schedule-row { min-height: 99px; padding: 12px; gap: 12px; }
+      .row-emoji { width: 57px; height: 57px; font-size: 29px; border-radius: 17px; }
+      .row-title { font-size: 19px; }
+      .bottom-banner { gap: 7px 13px; }
+      .popup { padding: 26px 15px; }
+      .popup p { font-size: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">🍙</div>
+        <div>
+          <div class="eyebrow">LUNCH TIME • HAPPY TIME</div>
+          <h1>週二午餐時光 <span aria-hidden="true">♡</span></h1>
+        </div>
+      </div>
+      <div class="top-controls">
+        <div class="date-badge" id="dateBadge">📅 載入日期中…</div>
+        <button type="button" class="btn" id="soundButton" title="啟用鬧鐘聲響（瀏覽器需要先點擊授權）">🔕 開啟鬧鐘聲音</button>
+        <button type="button" class="btn" id="testButton" title="試聽鬧鐘鈴聲">🎵 試聽</button>
+        <button type="button" class="btn" id="fullscreenButton">⛶ 全螢幕</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <div class="left-column">
+        <section class="card clock-card" aria-labelledby="clockTitle">
+          <div class="clock-intro">
+            <div>
+              <h2 class="small-label" id="clockTitle">☀️ 現在幾點了？</h2>
+              <p class="clock-subtitle">和飯糰寶寶一起，享受美味午餐！</p>
+            </div>
+            <svg class="mascot" viewBox="0 0 232 208" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="微笑的可愛飯碗卡通">
+              <path d="M22 71L26 59L30 71L42 75L30 79L26 91L22 79L10 75Z" fill="#FFC664"/>
+              <path d="M198 17L202 6L206 17L217 21L206 25L202 36L198 25L187 21Z" fill="#D4B5FB"/>
+              <path d="M189 95L192 87L195 95L203 98L195 101L192 109L189 101L181 98Z" fill="#FFB6C9"/>
+              <ellipse cx="114" cy="189" rx="75" ry="12" fill="#F4DAD9" opacity=".6"/>
+              <path d="M49 91C31 82 34 61 50 57C48 42 61 28 77 34C85 17 104 13 116 26C135 10 152 20 157 35C173 29 190 40 185 56C203 64 195 87 183 94Z" fill="#FFF" stroke="#EBCED1" stroke-width="4"/>
+              <path d="M40 91C38 137 56 178 115 183C169 178 191 135 189 91Z" fill="#FFADB4" stroke="#DD818F" stroke-width="5" stroke-linejoin="round"/>
+              <path d="M49 102C54 129 71 156 93 164" fill="none" stroke="#FFD5D8" stroke-width="9" stroke-linecap="round"/>
+              <ellipse cx="78" cy="134" rx="11" ry="7" fill="#F881A3" opacity=".72"/>
+              <ellipse cx="156" cy="134" rx="11" ry="7" fill="#F881A3" opacity=".72"/>
+              <path d="M91 122Q94 114 98 122" fill="none" stroke="#654F5A" stroke-width="5" stroke-linecap="round"/>
+              <path d="M132 122Q136 114 139 122" fill="none" stroke="#654F5A" stroke-width="5" stroke-linecap="round"/>
+              <path d="M110 133Q116 142 123 133" fill="none" stroke="#654F5A" stroke-width="4" stroke-linecap="round"/>
+              <path d="M55 80C75 91 155 91 178 80" stroke="#EBCED1" stroke-width="3" fill="none" opacity=".7"/>
+              <path d="M189 148L212 120" stroke="#A89BC8" stroke-width="7" stroke-linecap="round"/>
+              <ellipse cx="213" cy="116" rx="11" ry="18" transform="rotate(34 213 116)" fill="#D7C5F6" stroke="#A89BC8" stroke-width="3"/>
+              <path d="M65 172L58 191M163 172L174 189" stroke="#DD818F" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="time-area">
+            <div class="time" id="liveTime" aria-label="目前時間">--<span class="colon">:</span>--<span class="seconds">:--</span></div>
+            <div class="status-line">
+              <span class="current-phase" id="currentPhase">💗 準備迎接午餐</span>
+              <span class="next-reminder" id="nextReminder">下個提醒計算中…</span>
+            </div>
+            <div class="progress-area">
+              <div class="progress-labels"><span id="progressStart">12:00 午餐開始</span><span id="progressEnd">12:40 午餐結束</span></div>
+              <div class="progress-track" role="progressbar" aria-label="午餐時間進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card alarm-section" aria-labelledby="alarmHeading">
+          <div class="section-heading">
+            <h2 id="alarmHeading">⏰ 午餐小鬧鐘</h2>
+            <span class="section-desc">🌟 時間可修改，提醒文字點一下就能改</span>
+          </div>
+          <div class="alarm-grid">
+            <div class="alarm-box one" id="alarmBox1">
+              <div class="alarm-top">
+                <span class="alarm-name">🌷 第一聲提醒</span>
+                <label class="switch" title="開啟或關閉第一聲鬧鐘"><input type="checkbox" id="alarmEnabled1" checked aria-label="開啟第一聲鬧鐘"><span class="slider"></span></label>
+              </div>
+              <div class="alarm-time"><span class="alarm-icon">🧹</span><input class="alarm-input" id="alarmTime1" type="text" inputmode="numeric" maxlength="5" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" title="請輸入 24 小時制時間，例如 12:35" value="12:35" aria-label="第一聲鬧鐘時間"></div>
+              <p class="alarm-note inline-editable" contenteditable="true" role="textbox" aria-label="第一聲提醒指令，點選即可直接修改" spellcheck="false" data-alarm-instruction="0" title="點選文字直接編輯，按 Enter 或點空白處儲存">吃完囉！收拾餐具、擦桌子</p>
+            </div>
+            <div class="alarm-box two" id="alarmBox2">
+              <div class="alarm-top">
+                <span class="alarm-name">🍀 第二聲提醒</span>
+                <label class="switch" title="開啟或關閉第二聲鬧鐘"><input type="checkbox" id="alarmEnabled2" checked aria-label="開啟第二聲鬧鐘"><span class="slider"></span></label>
+              </div>
+              <div class="alarm-time"><span class="alarm-icon">🌙</span><input class="alarm-input" id="alarmTime2" type="text" inputmode="numeric" maxlength="5" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" title="請輸入 24 小時制時間，例如 12:38" value="12:38" aria-label="第二聲鬧鐘時間"></div>
+              <p class="alarm-note inline-editable" contenteditable="true" role="textbox" aria-label="第二聲提醒指令，點選即可直接修改" spellcheck="false" data-alarm-instruction="1" title="點選文字直接編輯，按 Enter 或點空白處儲存">關燈，準備午休。</p>
+            </div>
+          </div>
+          <p class="sound-tip" id="soundTip">🔔 先點上方「開啟鬧鐘聲音」，到時間才會發出鈴聲；即使沒開聲音，也會跳出大畫面提醒。請保持頁面開啟、避免裝置休眠。</p>
+        </section>
+      </div>
+
+      <section class="card timetable" aria-labelledby="scheduleHeading">
+        <div class="timetable-header">
+          <div>
+            <h2 id="scheduleHeading">🌈 今日午餐時間表</h2>
+            <p>✨ <strong>直接點文字即可修改</strong>，離開文字會自動儲存；改時間請按「編輯」</p>
+          </div>
+          <button type="button" class="edit-btn" id="editSchedule">✏️ 編輯時間</button>
+        </div>
+        <div class="schedule-list" id="scheduleList"></div>
+        <div class="schedule-footer"><span>✨ 每完成一項，就離元氣滿滿更近一步！</span><button class="reset-btn" id="resetButton" type="button">恢復預設時間表</button></div>
+      </section>
+    </div>
+
+    <footer class="bottom-banner" aria-label="午餐小約定">
+      <b>💌 午餐小約定</b>
+      <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第一項，可直接修改" data-promise="0" title="點文字修改，按 Enter 或點空白處儲存">🫧 小手洗乾淨</span><span class="separate">✦</span>
+      <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第二項，可直接修改" data-promise="1" title="點文字修改，按 Enter 或點空白處儲存">🍚 細嚼慢嚥不說話</span><span class="separate">✦</span>
+      <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第三項，可直接修改" data-promise="2" title="點文字修改，按 Enter 或點空白處儲存">🧽 桌面清潔亮晶晶</span><span class="separate">✦</span>
+      <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第四項，可直接修改" data-promise="3" title="點文字修改，按 Enter 或點空白處儲存">🌙 關燈，準備午休。</span>
+    </footer>
+  </main>
+
+  <div class="overlay" id="alarmOverlay" role="dialog" aria-modal="true" aria-labelledby="popupTitle" aria-hidden="true">
+    <div class="popup">
+      <span class="popup-icon" id="popupIcon" aria-hidden="true">🧹</span>
+      <div class="popup-kicker" id="popupKicker">🔔 午餐時間提醒！</div>
+      <h2 id="popupTitle">吃完囉！收拾餐具、擦桌子</h2>
+      <p id="popupDescription">完成任務後，按下方按鈕關閉提醒 💖</p>
+      <button class="dismiss-btn" type="button" id="dismissAlarm">好！我知道了 💖</button>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    'use strict';
+    // 全部功能均可離線使用，資料儲存在本機瀏覽器。
+    const STORAGE_KEY = 'cute_lunch_whiteboard_tuesday_v1';
+    const DEFAULT_SCHEDULE = [
+      {start:'12:00', end:'12:05', icon:'🫧', title:'洗手・準備用餐', note:'洗乾淨小手，坐好準備開動！'},
+      {start:'12:05', end:'12:35', icon:'🍱', title:'開心享用午餐', note:'細嚼慢嚥，珍惜每一口美味。'},
+      {start:'12:35', end:'12:38', icon:'🧽', title:'整理餐具・擦桌子', note:'餐具收整齊，桌面亮晶晶！'},
+      {start:'12:38', end:'12:40', icon:'🌙', title:'關燈，準備午休。', note:'放低音量，輕輕關燈，準備休息。'}
+    ];
+    const DEFAULT_ALARMS = [
+      { time: '12:35', enabled: true },
+      { time: '12:38', enabled: true }
+    ];
+    const DEFAULT_ALARM_INSTRUCTIONS = ['吃完囉！收拾餐具、擦桌子', '關燈，準備午休。'];
+    const DEFAULT_PROMISES = ['🫧 小手洗乾淨', '🍚 細嚼慢嚥不說話', '🧽 桌面清潔亮晶晶', '🌙 關燈，準備午休。'];
+    const REMINDERS = [
+      { icon:'🧹', theme:'pink' },
+      { icon:'🌙', theme:'mint' }
+    ];
+
+    const $ = id => document.getElementById(id);
+    const safe = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const validTime = s => typeof s === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+    const minutes = s => { const [h,m] = s.split(':').map(Number); return h*60+m; };
+    const pad = num => String(num).padStart(2, '0');
+    const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+    let toastTimeout = 0;
+
+    function readSaved() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; }
+      catch { return {}; }
+    }
+    const saved = readSaved();
+    let schedule = Array.isArray(saved.schedule) && saved.schedule.length === 4 &&
+      saved.schedule.every(x => validTime(x.start) && validTime(x.end) && minutes(x.start) < minutes(x.end) && typeof x.title === 'string' && typeof x.note === 'string')
+      ? saved.schedule.map((x,i) => ({ ...DEFAULT_SCHEDULE[i], ...x })) : structuredCloneSafe(DEFAULT_SCHEDULE);
+    // 舊版已儲存的預設語句，也自動換成使用者要求的新指令；其他自行修改的內容保留。
+    schedule.forEach(item => {
+      if (item.title === '椅子靠攏・安靜坐好' || item.title === '椅子靠攏、安靜坐好') {
+        item.title = '椅子靠攏 背好書包';
+        if (item.note === '輕聲慢步，準備午休時間。') item.note = '椅子推進桌下，再把書包背好！';
+        if (item.icon === '🪑') item.icon = '🎒';
+      }
+    });
+    let alarms = Array.isArray(saved.alarms) && saved.alarms.length === 2 && saved.alarms.every(x => validTime(x.time))
+      ? saved.alarms.map((x,i)=>({time:x.time,enabled:typeof x.enabled==='boolean'?x.enabled:DEFAULT_ALARMS[i].enabled}))
+      : structuredCloneSafe(DEFAULT_ALARMS);
+    let alarmInstructions = Array.isArray(saved.alarmInstructions) && saved.alarmInstructions.length === 2
+      ? saved.alarmInstructions.map((x,i) => typeof x === 'string' && x.trim() ? x : DEFAULT_ALARM_INSTRUCTIONS[i])
+      : [...DEFAULT_ALARM_INSTRUCTIONS];
+    // 已存過舊版預設內容時，套用這次修改。
+    alarmInstructions = alarmInstructions.map(text => text === '椅子靠攏、安靜坐好！' ? '椅子靠攏 背好書包' : text);
+    let promises = Array.isArray(saved.promises) && saved.promises.length === 4
+      ? saved.promises.map((x,i) => typeof x === 'string' && x.trim() ? x : DEFAULT_PROMISES[i])
+      : [...DEFAULT_PROMISES];
+    let editMode = false;
+    let alertQueue = [];
+    let popupOpen = false;
+    let audioContext = null;
+    let soundOn = false;
+    let melodyInterval = null;
+    let melodyTimeout = null;
+    let nextTargets = [0, 0];
+    let activeAlarms = [false, false];
+
+    function structuredCloneSafe(obj) { return JSON.parse(JSON.stringify(obj)); }
+    function persist() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ schedule, alarms, alarmInstructions, promises })); }
+      catch { /* 私密瀏覽或停用儲存時，仍可正常使用本次頁面。 */ }
+    }
+    function toast(message) {
+      const el = $('toast'); el.textContent = message; el.classList.add('show');
+      clearTimeout(toastTimeout); toastTimeout = setTimeout(() => el.classList.remove('show'), 3100);
+    }
+    function renderSchedule() {
+      $('scheduleList').innerHTML = schedule.map((item, i) => `
+        <article class="schedule-row" data-index="${i}">
+          <span class="now-tag">NOW! 進行中</span>
+          <div class="row-emoji" aria-hidden="true">${safe(item.icon)}</div>
+          <div class="row-detail">
+            <div class="view-fields">
+              <div class="row-time">${safe(item.start)} ～ ${safe(item.end)}</div>
+              <h3 class="row-title inline-editable" contenteditable="true" role="textbox" spellcheck="false" data-kind="title" aria-label="第${i+1}項活動名稱，可直接修改" title="點選文字直接編輯，按 Enter 或點空白處儲存">${safe(item.title)}</h3>
+              <p class="row-desc inline-editable" contenteditable="true" role="textbox" spellcheck="false" data-kind="note" aria-label="第${i+1}項活動說明，可直接修改" title="點選文字直接編輯，按 Enter 或點空白處儲存">${safe(item.note)}</p>
+            </div>
+            <div class="edit-fields">
+              <div class="times-edit">
+                <input type="text" maxlength="5" inputmode="numeric" title="24 小時制 HH:MM" aria-label="第${i+1}項開始時間" data-kind="start" value="${safe(item.start)}">
+                <span>～</span>
+                <input type="text" maxlength="5" inputmode="numeric" title="24 小時制 HH:MM" aria-label="第${i+1}項結束時間" data-kind="end" value="${safe(item.end)}">
+              </div>
+              <input type="text" maxlength="28" aria-label="第${i+1}項名稱" data-kind="title" value="${safe(item.title)}">
+              <input type="text" maxlength="45" aria-label="第${i+1}項說明" data-kind="note" value="${safe(item.note)}">
+            </div>
+          </div>
+        </article>`).join('');
+      $('scheduleList').classList.toggle('edit-mode', editMode);
+      updateCurrentSchedule(new Date());
+    }
+    function saveScheduleEdit() {
+      const rows = Array.from(document.querySelectorAll('.schedule-row'));
+      const updated = rows.map((row, i) => {
+        const val = key => row.querySelector(`.edit-fields [data-kind="${key}"]`).value.trim();
+        return { ...schedule[i], start:val('start'), end:val('end'), title:val('title'), note:val('note') };
+      });
+      if (updated.some(x => !validTime(x.start) || !validTime(x.end) || minutes(x.start) >= minutes(x.end) || !x.title)) {
+        toast('請確認每段的開始時間早於結束時間，並填寫活動名稱～'); return false;
+      }
+      updated.sort((a,b) => minutes(a.start)-minutes(b.start));
+      if (updated.some((x,i) => i && minutes(x.start) < minutes(updated[i-1].end))) {
+        toast('時間表的活動不能互相重疊唷！'); return false;
+      }
+      schedule = updated;
+      persist();
+      toast('✨ 時間表已儲存！');
+      return true;
+    }
+    function updateCurrentSchedule(now) {
+      const current = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
+      const first = Math.min(...schedule.map(x=>minutes(x.start)));
+      const last = Math.max(...schedule.map(x=>minutes(x.end)));
+      let matched = -1;
+      schedule.forEach((item, i) => {
+        const active = current >= minutes(item.start) && current < minutes(item.end);
+        if (active) matched = i;
+      });
+      document.querySelectorAll('.schedule-row').forEach((row, i)=>row.classList.toggle('active', matched===i));
+      const phase = matched >= 0 ? `${schedule[matched].icon} ${schedule[matched].title}` :
+        (current < first ? '🌸 午餐時間還沒開始' : '🌙 今天的午餐任務完成！');
+      $('currentPhase').textContent = phase;
+      $('progressStart').textContent = `${pad(Math.floor(first/60))}:${pad(first%60)} 午餐開始`;
+      $('progressEnd').textContent = `${pad(Math.floor(last/60))}:${pad(last%60)} 午餐結束`;
+      const value = Math.round(Math.max(0,Math.min(1,(current-first)/(last-first)))*100);
+      $('progressFill').style.width = value+'%';
+      $('progressTrack').setAttribute('aria-valuenow',String(value));
+    }
+    function nextAlarmDate(time, fromMs) {
+      const [hours, mins] = time.split(':').map(Number);
+      const next = new Date(fromMs); next.setHours(hours, mins, 0, 0);
+      if (next.getTime() <= fromMs) next.setDate(next.getDate()+1);
+      return next.getTime();
+    }
+    function scheduleAlarm(index) {
+      nextTargets[index] = nextAlarmDate(alarms[index].time, Date.now());
+    }
+    function timeLeft(ms) {
+      const seconds = Math.max(0, Math.ceil(ms/1000));
+      const h = Math.floor(seconds/3600), m = Math.floor(seconds%3600/60), s = seconds%60;
+      return h ? `${pad(h)}時${pad(m)}分${pad(s)}秒` : `${pad(m)}分${pad(s)}秒`;
+    }
+    function updateCountdown(nowMs) {
+      let idx = -1;
+      alarms.forEach((a,i)=> {
+        if (a.enabled && (idx < 0 || nextTargets[i] < nextTargets[idx])) idx = i;
+      });
+      $('nextReminder').innerHTML = idx < 0 ? '💤 目前兩個鬧鐘皆已關閉' :
+        `🔔 下一個 ${safe(alarms[idx].time)} <strong>倒數 ${timeLeft(nextTargets[idx] - nowMs)}</strong>`;
+    }
+    function localDateKey(date) { return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`; }
+    function tick() {
+      const now = new Date();
+      $('dateBadge').textContent = `📅 ${now.getFullYear()} / ${pad(now.getMonth()+1)} / ${pad(now.getDate())}　${weekdays[now.getDay()]}`;
+      $('liveTime').innerHTML = `${pad(now.getHours())}<span class="colon">:</span>${pad(now.getMinutes())}<span class="seconds">:${pad(now.getSeconds())}</span>`;
+      const nowMs = now.getTime();
+      alarms.forEach((alarm,i)=>{
+        if (!alarm.enabled || !nextTargets[i] || nowMs < nextTargets[i]) return;
+        const lateBy = nowMs - nextTargets[i];
+        if (lateBy < 90000) { // 系統睡眠太久再返回時，不播放已過很久的鬧鐘。
+          alertQueue.push(i);
+        }
+        nextTargets[i] = nextAlarmDate(alarm.time, nowMs + 500);
+      });
+      if (alertQueue.length && !popupOpen) showNextAlarm();
+      updateCountdown(nowMs);
+      updateCurrentSchedule(now);
+    }
+    function renderAlarms() {
+      alarms.forEach((a, i)=>{
+        document.querySelector(`[data-alarm-instruction="${i}"]`).textContent = alarmInstructions[i];
+        $('alarmTime'+(i+1)).value = a.time;
+        $('alarmEnabled'+(i+1)).checked = a.enabled;
+        $('alarmBox'+(i+1)).classList.toggle('disabled', !a.enabled);
+      });
+    }
+    function renderPromises() {
+      document.querySelectorAll('[data-promise]').forEach(el => {
+        el.textContent = promises[Number(el.dataset.promise)];
+      });
+    }
+    // 所有指令原地編輯：活動標題／說明、兩組鬧鐘提示、下方午餐小約定。
+    // 失焦或按 Enter 立即寫入本機儲存，下次重開還在。
+    function commitInlineEdit(el) {
+      const text = el.textContent.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+      let original = '';
+      if (el.dataset.alarmInstruction !== undefined) {
+        const index = Number(el.dataset.alarmInstruction);
+        original = alarmInstructions[index];
+        alarmInstructions[index] = text.slice(0, 70) || original;
+        el.textContent = alarmInstructions[index];
+      } else if (el.dataset.promise !== undefined) {
+        const index = Number(el.dataset.promise);
+        original = promises[index];
+        promises[index] = text.slice(0, 50) || original;
+        el.textContent = promises[index];
+      } else {
+        const row = el.closest('.schedule-row');
+        if (!row) return;
+        const index = Number(row.dataset.index);
+        const kind = el.dataset.kind;
+        original = schedule[index][kind];
+        schedule[index][kind] = text.slice(0, kind === 'title' ? 50 : 95) || original;
+        el.textContent = schedule[index][kind];
+        updateCurrentSchedule(new Date());
+      }
+      if (el.textContent !== original) { persist(); toast('💗 指令已自動儲存！'); }
+      else if (!text) toast('指令不能留白，已還原原本內容～');
+    }
+    document.addEventListener('focusout', event => {
+      if (event.target.matches('.inline-editable')) commitInlineEdit(event.target);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.target.matches('.inline-editable') && event.key === 'Enter') {
+        event.preventDefault(); event.target.blur();
+      }
+    });
+    document.addEventListener('paste', event => {
+      if (!event.target.matches('.inline-editable')) return;
+      event.preventDefault();
+      const text = (event.clipboardData?.getData('text/plain') || '').replace(/[\r\n]+/g, ' ');
+      // 避免從 Word／網頁貼入 HTML 格式破壞白板外觀。
+      if (document.queryCommandSupported?.('insertText')) document.execCommand('insertText', false, text);
+      else {
+        const selection = window.getSelection();
+        if (selection?.rangeCount) {
+          const range = selection.getRangeAt(0); range.deleteContents(); range.insertNode(document.createTextNode(text));
+          range.collapse(false); selection.removeAllRanges(); selection.addRange(range);
+        }
+      }
+    });
+    function makeAudio() {
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) { toast('目前的瀏覽器不支援音效，但畫面提醒仍可正常使用'); return null; }
+      try { if (!audioContext) audioContext = new AudioCtor(); return audioContext; }
+      catch { toast('無法啟動聲音，請檢查裝置或瀏覽器設定'); return null; }
+    }
+    function chime() {
+      if (!soundOn || !audioContext || audioContext.state !== 'running') return;
+      const start = audioContext.currentTime + .02;
+      const notes = [784, 988, 1175, 988, 880, 1175];
+      notes.forEach((freq, i)=>{
+        const t = start + i*.25;
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(freq,t);
+        gain.gain.setValueAtTime(.0001,t);
+        gain.gain.exponentialRampToValueAtTime(.12,t+.025);
+        gain.gain.exponentialRampToValueAtTime(.0001,t+.2);
+        oscillator.connect(gain); gain.connect(audioContext.destination);
+        oscillator.start(t); oscillator.stop(t+.23);
+      });
+    }
+    async function soundButtonClicked() {
+      if (soundOn) {
+        soundOn=false; stopMelody(); $('soundButton').classList.remove('sound-ready');
+        $('soundButton').textContent='🔕 開啟鬧鐘聲音';
+        $('soundTip').textContent='🔕 鬧鐘聲音已關閉；到時間仍會跳出大畫面提醒。請保持頁面開啟、避免裝置休眠。';
+        toast('🔕 已關閉鬧鐘聲音'); return;
+      }
+      const ctx = makeAudio(); if (!ctx) return;
+      try { await ctx.resume(); soundOn=ctx.state==='running'; }
+      catch { soundOn=false; }
+      if (!soundOn) { toast('聲音未啟動，請先解除裝置靜音或允許音訊'); return; }
+      $('soundButton').classList.add('sound-ready'); $('soundButton').textContent='🔊 鈴聲已開啟';
+      $('soundTip').textContent='✅ 聲音已啟用！12:35 與 12:38 到時會有畫面提醒和可愛鈴聲（時間可在上方修改）。請讓頁面保持開啟，避免裝置休眠。';
+      chime(); toast('🎶 鬧鐘鈴聲已開啟，剛剛是試聽音效！');
+    }
+    async function testSound() {
+      const ctx=makeAudio(); if (!ctx) return;
+      try { await ctx.resume(); } catch {}
+      if (ctx.state !== 'running') { toast('試聽失敗，請確認瀏覽器音效權限'); return; }
+      const previouslyOn = soundOn; soundOn=true; chime(); soundOn=previouslyOn;
+      toast('🎵 正在播放鈴聲試聽～');
+    }
+    function stopMelody() {
+      if (melodyInterval) clearInterval(melodyInterval);
+      if (melodyTimeout) clearTimeout(melodyTimeout);
+      melodyInterval=null; melodyTimeout=null;
+    }
+    function startMelody() {
+      stopMelody();
+      if (!soundOn) return;
+      if (audioContext?.state === 'suspended') audioContext.resume().then(chime).catch(()=>{});
+      else chime();
+      melodyInterval=setInterval(chime, 2250);
+      melodyTimeout=setTimeout(stopMelody, 30000);
+    }
+    function showNextAlarm() {
+      if (!alertQueue.length) return;
+      popupOpen = true;
+      const idx=alertQueue.shift();
+      const info=REMINDERS[idx];
+      $('popupIcon').textContent=info.icon;
+      $('popupKicker').textContent=`🔔 ${alarms[idx].time} ${idx===0?'第一聲':'第二聲'}提醒！`;
+      $('popupTitle').textContent=alarmInstructions[idx];
+      $('popupDescription').textContent='完成任務後，按下方按鈕關閉提醒 💖';
+      $('alarmOverlay').classList.toggle('mint',info.theme==='mint');
+      $('alarmOverlay').classList.add('show');
+      $('alarmOverlay').setAttribute('aria-hidden','false');
+      $('dismissAlarm').focus();
+      startMelody();
+    }
+    function dismissAlarm() {
+      stopMelody();
+      $('alarmOverlay').classList.remove('show');
+      $('alarmOverlay').setAttribute('aria-hidden','true');
+      popupOpen=false;
+      if (alertQueue.length) setTimeout(showNextAlarm, 170);
+    }
+
+    // 初始載入
+    renderSchedule(); renderAlarms(); renderPromises(); persist();
+    alarms.forEach((_,i)=>scheduleAlarm(i));
+    tick();
+    setInterval(tick, 500);
+
+    $('editSchedule').addEventListener('click',()=>{
+      if (editMode && !saveScheduleEdit()) return;
+      editMode=!editMode;
+      $('editSchedule').textContent=editMode?'💾 儲存時間表':'✏️ 編輯時間';
+      $('editSchedule').classList.toggle('editing',editMode);
+      renderSchedule();
+    });
+    $('resetButton').addEventListener('click',()=>{
+      if (!confirm('要將午餐時間表恢復為最初的四個時段嗎？（鬧鐘設定不會被更動）')) return;
+      schedule=structuredCloneSafe(DEFAULT_SCHEDULE); editMode=false; persist();
+      $('editSchedule').textContent='✏️ 編輯時間'; $('editSchedule').classList.remove('editing');
+      renderSchedule(); toast('🌼 已恢復預設時間表');
+    });
+    alarms.forEach((_,i)=>{
+      $('alarmTime'+(i+1)).addEventListener('change',event=>{
+        if (!validTime(event.target.value)) { event.target.value=alarms[i].time; toast("請輸入 HH:MM 的 24 小時制時間，例如 12:35"); return; }
+        alarms[i].time=event.target.value; scheduleAlarm(i); persist(); updateCountdown(Date.now());
+        toast(`⏰ 第${i+1}聲鬧鐘已改成 ${alarms[i].time}`);
+      });
+      $('alarmEnabled'+(i+1)).addEventListener('change',event=>{
+        alarms[i].enabled=event.target.checked;
+        scheduleAlarm(i); renderAlarms(); persist(); updateCountdown(Date.now());
+        toast(`第${i+1}聲鬧鐘已${alarms[i].enabled?'開啟':'關閉'}`);
+      });
+    });
+    $('soundButton').addEventListener('click',soundButtonClicked);
+    $('testButton').addEventListener('click',testSound);
+    $('dismissAlarm').addEventListener('click',dismissAlarm);
+    $('fullscreenButton').addEventListener('click', async ()=>{
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+          $('fullscreenButton').textContent='⛶ 離開全螢幕';
+        } else {
+          await document.exitFullscreen();
+          $('fullscreenButton').textContent='⛶ 全螢幕';
+        }
+      } catch { toast('這個瀏覽器暫時無法切換全螢幕'); }
+    });
+    document.addEventListener('fullscreenchange',()=>{
+      $('fullscreenButton').textContent=document.fullscreenElement?'⛶ 離開全螢幕':'⛶ 全螢幕';
+    });
+    // 頁面從背景回到前景時，立即更新時間與提醒。
+    document.addEventListener('visibilitychange',()=>{ if (!document.hidden) tick(); });
+  </script>
+</body>
+</html>
