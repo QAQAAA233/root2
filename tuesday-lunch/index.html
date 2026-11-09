@@ -275,8 +275,8 @@
                 <span class="alarm-name">🌷 第一聲提醒</span>
                 <label class="switch" title="開啟或關閉第一聲鬧鐘"><input type="checkbox" id="alarmEnabled1" checked aria-label="開啟第一聲鬧鐘"><span class="slider"></span></label>
               </div>
-              <div class="alarm-time"><span class="alarm-icon">🧹</span><input class="alarm-input" id="alarmTime1" type="text" inputmode="numeric" maxlength="5" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" title="請輸入 24 小時制時間，例如 12:35" value="12:35" aria-label="第一聲鬧鐘時間"></div>
-              <p class="alarm-note inline-editable" contenteditable="true" role="textbox" aria-label="第一聲提醒指令，點選即可直接修改" spellcheck="false" data-alarm-instruction="0" title="點選文字直接編輯，按 Enter 或點空白處儲存">吃完囉！收拾餐具、擦桌子</p>
+              <div class="alarm-time"><span class="alarm-icon">🪥</span><input class="alarm-input" id="alarmTime1" type="text" inputmode="numeric" maxlength="5" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" title="請輸入 24 小時制時間，例如 12:35" value="12:35" aria-label="第一聲鬧鐘時間"></div>
+              <p class="alarm-note inline-editable" contenteditable="true" role="textbox" aria-label="第一聲提醒指令，點選即可直接修改" spellcheck="false" data-alarm-instruction="0" title="點選文字直接編輯，按 Enter 或點空白處儲存">刷牙、漱口、整理桌面</p>
             </div>
             <div class="alarm-box two" id="alarmBox2">
               <div class="alarm-top">
@@ -308,7 +308,7 @@
       <b>💌 午餐小約定</b>
       <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第一項，可直接修改" data-promise="0" title="點文字修改，按 Enter 或點空白處儲存">🫧 小手洗乾淨</span><span class="separate">✦</span>
       <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第二項，可直接修改" data-promise="1" title="點文字修改，按 Enter 或點空白處儲存">🍚 細嚼慢嚥不說話</span><span class="separate">✦</span>
-      <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第三項，可直接修改" data-promise="2" title="點文字修改，按 Enter 或點空白處儲存">🧽 桌面清潔亮晶晶</span><span class="separate">✦</span>
+      <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第三項，可直接修改" data-promise="2" title="點文字修改，按 Enter 或點空白處儲存">🪥 刷牙、漱口、整理桌面</span><span class="separate">✦</span>
       <span class="inline-editable promise-text" contenteditable="true" role="textbox" aria-label="午餐小約定第四項，可直接修改" data-promise="3" title="點文字修改，按 Enter 或點空白處儲存">🌙 關燈，準備午休。</span>
     </footer>
   </main>
@@ -317,7 +317,7 @@
     <div class="popup">
       <span class="popup-icon" id="popupIcon" aria-hidden="true">🧹</span>
       <div class="popup-kicker" id="popupKicker">🔔 午餐時間提醒！</div>
-      <h2 id="popupTitle">吃完囉！收拾餐具、擦桌子</h2>
+      <h2 id="popupTitle">刷牙、漱口、整理桌面</h2>
       <p id="popupDescription">完成任務後，按下方按鈕關閉提醒 💖</p>
       <button class="dismiss-btn" type="button" id="dismissAlarm">好！我知道了 💖</button>
     </div>
@@ -331,17 +331,17 @@
     const DEFAULT_SCHEDULE = [
       {start:'12:00', end:'12:05', icon:'🫧', title:'洗手・準備用餐', note:'洗乾淨小手，坐好準備開動！'},
       {start:'12:05', end:'12:35', icon:'🍱', title:'開心享用午餐', note:'細嚼慢嚥，珍惜每一口美味。'},
-      {start:'12:35', end:'12:38', icon:'🧽', title:'整理餐具・擦桌子', note:'餐具收整齊，桌面亮晶晶！'},
+      {start:'12:35', end:'12:38', icon:'🪥', title:'刷牙、漱口、整理桌面', note:'刷牙、漱口，再把桌面整理乾淨！'},
       {start:'12:38', end:'12:40', icon:'🌙', title:'關燈，準備午休。', note:'放低音量，輕輕關燈，準備休息。'}
     ];
     const DEFAULT_ALARMS = [
       { time: '12:35', enabled: true },
       { time: '12:38', enabled: true }
     ];
-    const DEFAULT_ALARM_INSTRUCTIONS = ['吃完囉！收拾餐具、擦桌子', '關燈，準備午休。'];
-    const DEFAULT_PROMISES = ['🫧 小手洗乾淨', '🍚 細嚼慢嚥不說話', '🧽 桌面清潔亮晶晶', '🌙 關燈，準備午休。'];
+    const DEFAULT_ALARM_INSTRUCTIONS = ['刷牙、漱口、整理桌面', '關燈，準備午休。'];
+    const DEFAULT_PROMISES = ['🫧 小手洗乾淨', '🍚 細嚼慢嚥不說話', '🪥 刷牙、漱口、整理桌面', '🌙 關燈，準備午休。'];
     const REMINDERS = [
-      { icon:'🧹', theme:'pink' },
+      { icon:'🪥', theme:'pink' },
       { icon:'🌙', theme:'mint' }
     ];
 
@@ -369,6 +369,12 @@
         if (item.icon === '🪑') item.icon = '🎒';
       }
     });
+    // 已開啟過舊版時，只更新仍為舊預設的 12:35 說明；不改動老師自行編輯的文字。
+    if (schedule[2]?.title === '整理餐具・擦桌子') {
+      schedule[2].title = '刷牙、漱口、整理桌面';
+      schedule[2].icon = '🪥';
+      if (schedule[2].note === '餐具收整齊，桌面亮晶晶！') schedule[2].note = '刷牙、漱口，再把桌面整理乾淨！';
+    }
     let alarms = Array.isArray(saved.alarms) && saved.alarms.length === 2 && saved.alarms.every(x => validTime(x.time))
       ? saved.alarms.map((x,i)=>({time:x.time,enabled:typeof x.enabled==='boolean'?x.enabled:DEFAULT_ALARMS[i].enabled}))
       : structuredCloneSafe(DEFAULT_ALARMS);
@@ -377,9 +383,13 @@
       : [...DEFAULT_ALARM_INSTRUCTIONS];
     // 已存過舊版預設內容時，套用這次修改。
     alarmInstructions = alarmInstructions.map(text => text === '椅子靠攏、安靜坐好！' ? '椅子靠攏 背好書包' : text);
+    if (alarmInstructions[0] === '吃完囉！收拾餐具、擦桌子') {
+      alarmInstructions[0] = '刷牙、漱口、整理桌面';
+    }
     let promises = Array.isArray(saved.promises) && saved.promises.length === 4
       ? saved.promises.map((x,i) => typeof x === 'string' && x.trim() ? x : DEFAULT_PROMISES[i])
       : [...DEFAULT_PROMISES];
+    if (promises[2] === '🧽 桌面清潔亮晶晶') promises[2] = '🪥 刷牙、漱口、整理桌面';
     let editMode = false;
     let alertQueue = [];
     let popupOpen = false;
