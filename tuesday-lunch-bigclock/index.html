@@ -326,6 +326,47 @@
       .time { font-size: clamp(56px, 18vw, 65px); }
     }
 
+  
+    /* 第三版：主時鐘數字約兩倍高，秒數另起一行，避免橫向擠出畫面。 */
+    .clock-card { min-height: max(740px, 90vh); padding: 20px 36px 25px; }
+    .clock-intro { position: relative; z-index: 2; }
+    .time-area { margin-top: 0; }
+    .time {
+      font-size: clamp(300px, 34vw, 690px);
+      line-height: .9;
+      letter-spacing: -.065em;
+      transform: scaleX(.78);
+      transform-origin: center center;
+      width: 128.205%;
+      margin-left: -14.1025%;
+      text-align: center;
+    }
+    .seconds {
+      display: block;
+      font-size: .24em;
+      line-height: .9;
+      letter-spacing: 0;
+      text-align: right;
+      padding-right: 9%;
+      margin-top: -.02em;
+      vertical-align: baseline;
+    }
+    .status-line, .progress-area { position: relative; z-index: 2; }
+    @media (max-width: 1140px) {
+      .clock-card { min-height: max(590px, 76vh); }
+      .time { font-size: clamp(240px, 34vw, 440px); }
+    }
+    @media (max-width: 680px) {
+      .clock-card { min-height: 465px; padding: 18px 12px 22px; }
+      .time { font-size: clamp(112px, 34vw, 232px); line-height: 1; }
+      .seconds { font-size: .26em; padding-right: 5%; }
+      .mascot { width: min(20vw, 90px); }
+    }
+    @media (max-width: 360px) {
+      .clock-card { min-height: 420px; }
+      .time { font-size: 34vw; }
+    }
+
   </style>
 </head>
 <body>
