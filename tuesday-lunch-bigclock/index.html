@@ -307,6 +307,25 @@
       .mascot { width: 75px; }
     }
 
+  
+    /* ===== 大時鐘第 2 版：在保留既有版面的前提下進一步放大數字 ===== */
+    .clock-card { min-height: 460px; }
+    .time-area { margin-top: -2px; }
+    .time { font-size: clamp(165px, 17vw, 345px); line-height: 1.01; letter-spacing: -.046em; }
+    .seconds { font-size: .46em; vertical-align: 12%; }
+    @media (max-width: 1140px) {
+      .clock-card { min-height: 425px; }
+      .time { font-size: clamp(116px, 18.2vw, 210px); }
+    }
+    @media (max-width: 680px) {
+      .clock-card { min-height: 355px; }
+      .time { font-size: clamp(61px, 18.2vw, 112px); letter-spacing: -.058em; }
+    }
+    @media (max-width: 360px) {
+      .clock-card { min-height: 345px; }
+      .time { font-size: clamp(56px, 18vw, 65px); }
+    }
+
   </style>
 </head>
 <body>
