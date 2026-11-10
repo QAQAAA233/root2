@@ -432,6 +432,169 @@
       .alarm-section .sound-tip { font-size: 11px; }
     }
 
+  
+    /* 2026-11-10 全螢幕固定顯示：大時鐘與兩個並排鬧鐘不需捲動 */
+    html:fullscreen,
+    html:fullscreen body { height: 100%; overflow: hidden; }
+    html:fullscreen .page {
+      box-sizing: border-box;
+      width: min(1800px, calc(100% - 28px));
+      height: 100vh;
+      max-height: 100vh;
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    html:fullscreen .topbar {
+      flex: 0 0 auto;
+      margin-bottom: 8px;
+      gap: 10px;
+    }
+    html:fullscreen .logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 15px;
+      font-size: 29px;
+    }
+    html:fullscreen .eyebrow { font-size: 11px; letter-spacing: 1px; }
+    html:fullscreen h1 { font-size: clamp(26px, 2.3vw, 42px); }
+    html:fullscreen .date-badge,
+    html:fullscreen .btn { font-size: 13px; padding: 7px 11px; }
+    html:fullscreen .layout {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
+      align-items: stretch;
+      min-height: 0;
+      gap: 9px;
+      overflow: hidden;
+    }
+    html:fullscreen .left-column { display: contents; }
+    html:fullscreen .clock-card {
+      grid-column: 1;
+      grid-row: 1;
+      min-height: 0;
+      height: 100%;
+      padding: 12px 24px 10px;
+      border-radius: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+    html:fullscreen .clock-intro { flex: 0 0 auto; }
+    html:fullscreen .small-label { font-size: clamp(16px, 1.4vw, 22px); }
+    html:fullscreen .clock-subtitle { font-size: 13px; }
+    html:fullscreen .mascot {
+      width: clamp(65px, 6vw, 100px);
+      margin: -2px 0 0;
+    }
+    html:fullscreen .time-area {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-top: 0;
+    }
+    html:fullscreen .time {
+      flex: 0 1 auto;
+      font-size: min(33vw, calc(90vh - 333px));
+      line-height: .88;
+      letter-spacing: -.065em;
+    }
+    html:fullscreen .time .seconds {
+      display: block;
+      font-size: .18em;
+      line-height: .95;
+      padding-right: 8%;
+      margin-top: 0;
+    }
+    html:fullscreen .status-line {
+      flex: 0 0 auto;
+      margin-top: 5px;
+      gap: 7px;
+    }
+    html:fullscreen .current-phase {
+      font-size: clamp(12px, 1vw, 16px);
+      padding: 5px 11px;
+    }
+    html:fullscreen .next-reminder { font-size: clamp(12px, 1vw, 16px); }
+    html:fullscreen .progress-area { display: none; }
+    html:fullscreen .alarm-section {
+      grid-column: 1;
+      grid-row: 2;
+      min-height: 0;
+      padding: 10px 16px 11px;
+      border-radius: 20px;
+    }
+    html:fullscreen .alarm-section .section-heading {
+      margin-bottom: 7px;
+      gap: 8px;
+    }
+    html:fullscreen .alarm-section .section-heading h2 {
+      font-size: clamp(17px, 1.25vw, 22px);
+    }
+    html:fullscreen .alarm-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    html:fullscreen .alarm-box {
+      min-width: 0;
+      padding: 9px 15px 10px;
+      border-radius: 15px;
+    }
+    html:fullscreen .alarm-name { font-size: clamp(13px, 1vw, 17px); }
+    html:fullscreen .alarm-icon { font-size: 24px; }
+    html:fullscreen .alarm-input {
+      font-size: clamp(24px, 2vw, 34px);
+      max-width: 160px;
+    }
+    html:fullscreen .alarm-note {
+      font-size: clamp(13px, .98vw, 17px);
+      line-height: 1.35;
+    }
+    html:fullscreen .alarm-section .sound-tip { display: none; }
+    html:fullscreen .timetable,
+    html:fullscreen .bottom-banner { display: none; }
+    @media (max-height: 730px) {
+      html:fullscreen .page { padding: 5px 0; }
+      html:fullscreen .topbar { margin-bottom: 4px; }
+      html:fullscreen .clock-card { padding: 5px 15px; }
+      html:fullscreen .clock-intro .clock-subtitle { display: none; }
+      html:fullscreen .clock-intro .mascot { width: 60px; }
+      html:fullscreen .alarm-section { padding: 7px 12px 8px; }
+      html:fullscreen .alarm-box { padding: 6px 12px 7px; }
+      html:fullscreen .time { font-size: min(33vw, calc(90vh - 280px)); }
+    }
+    @media (max-width: 680px) {
+      html:fullscreen .page { width: calc(100% - 12px); }
+      html:fullscreen .topbar { gap: 7px; }
+      html:fullscreen .logo { width: 39px; height: 39px; font-size: 22px; }
+      html:fullscreen h1 { font-size: 24px; }
+      html:fullscreen .top-controls { gap: 5px; }
+      html:fullscreen .date-badge,
+      html:fullscreen .btn { padding: 5px 7px; font-size: 11px; }
+      html:fullscreen .clock-card { padding: 9px 10px 8px; }
+      html:fullscreen .time { font-size: min(33vw, calc(90vh - 290px)); }
+      html:fullscreen .clock-subtitle { font-size: 11px; }
+      html:fullscreen .mascot { width: 64px; }
+      html:fullscreen .status-line { gap: 3px; }
+      html:fullscreen .current-phase,
+      html:fullscreen .next-reminder { font-size: 11px; }
+      html:fullscreen .alarm-section { padding: 8px 8px 9px; }
+      html:fullscreen .alarm-section .section-heading h2 { font-size: 16px; }
+      html:fullscreen .alarm-grid { gap: 6px; }
+      html:fullscreen .alarm-box { padding: 7px 6px 8px; }
+      html:fullscreen .alarm-name { font-size: 12px; }
+      html:fullscreen .alarm-icon { display: none; }
+      html:fullscreen .alarm-input { font-size: clamp(22px, 6vw, 30px); }
+      html:fullscreen .alarm-note { font-size: 12px; overflow-wrap: anywhere; }
+    }
+
   </style>
 </head>
 <body>
