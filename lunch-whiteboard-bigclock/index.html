@@ -367,6 +367,71 @@
       .time { font-size: 34vw; }
     }
 
+  
+    /* ===== 2026-11-10 午餐小鬧鐘：緊接大時鐘下方，左右精簡雙提醒 ===== */
+    .layout { align-items: start; }
+    .left-column { display: contents; }
+    .clock-card { grid-column: 1 / -1; }
+    .alarm-section {
+      grid-column: 1 / -1;
+      padding: 14px 23px 15px;
+      min-width: 0;
+    }
+    .alarm-section .section-heading {
+      gap: 9px;
+      margin-bottom: 9px;
+      flex-wrap: wrap;
+    }
+    .alarm-section .section-heading h2 {
+      font-size: clamp(21px, 1.5vw, 27px);
+    }
+    .alarm-section .section-desc { font-size: 12px; }
+    .alarm-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .alarm-box { padding: 11px 17px 12px; border-radius: 18px; }
+    .alarm-top { align-items: center; }
+    .alarm-name { font-size: clamp(14px, 1.1vw, 19px); }
+    .alarm-time { margin-top: 1px; gap: 8px; }
+    .alarm-icon { font-size: 27px; }
+    .alarm-input {
+      font-size: clamp(27px, 2.35vw, 39px);
+      width: min(100%, 160px);
+      padding-bottom: 2px;
+    }
+    .alarm-note {
+      margin: 3px 0 0;
+      font-size: clamp(14px, 1.05vw, 18px);
+      line-height: 1.45;
+    }
+    .alarm-section .sound-tip {
+      margin: 7px 1px 0;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .timetable { grid-column: 1 / -1; }
+    @media (max-width: 680px) {
+      .alarm-section { padding: 13px 10px 12px; }
+      .alarm-section .section-heading h2 { font-size: 19px; }
+      .alarm-section .section-desc { font-size: 11px; }
+      .alarm-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+      .alarm-box { padding: 11px 8px 12px; border-radius: 13px; min-width: 0; }
+      .alarm-name { font-size: 12px; white-space: normal; line-height: 1.25; }
+      .alarm-top .switch { width: 40px; height: 25px; }
+      .alarm-top .slider::before { width: 17px; height: 17px; }
+      .alarm-top .switch input:checked + .slider::before { transform: translateX(15px); }
+      .alarm-time { gap: 3px; }
+      .alarm-icon { display: none; }
+      .alarm-input { font-size: clamp(23px, 6.4vw, 35px); width: 100%; }
+      .alarm-note { font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+      .alarm-section .sound-tip { font-size: 11px; }
+    }
+
   </style>
 </head>
 <body>
