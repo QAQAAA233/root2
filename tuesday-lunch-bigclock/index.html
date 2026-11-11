@@ -595,6 +595,42 @@
       html:fullscreen .alarm-note { font-size: 12px; overflow-wrap: anywhere; }
     }
 
+  
+    /* 電子白板相容鈴聲：顯示是否已解鎖音效，保留全螢幕可用的控制鈕 */
+    .sound-status {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 900;
+      color: #a94f4f;
+      background: #fff0e4;
+      border: 2px solid #ffdcc7;
+      white-space: nowrap;
+    }
+    .sound-status.ready {
+      background: #e7f9ed;
+      border-color: #a9e6bc;
+      color: #2d8050;
+    }
+    .sound-retry {
+      background: #6dbca1;
+      color: #fff;
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 16px;
+      margin: 8px 0;
+      font-size: 17px;
+      font-weight: 900;
+    }
+    .sound-retry[hidden] { display: none; }
+    @media (max-width: 680px) {
+      .sound-status { padding: 5px 8px; font-size: 11px; }
+    }
+    html:fullscreen .sound-status { padding: 5px 9px; font-size: 12px; }
+    html:fullscreen #soundModeButton { padding: 6px 9px; font-size: 12px; }
+
   </style>
 </head>
 <body>
@@ -609,7 +645,9 @@
       </div>
       <div class="top-controls">
         <div class="date-badge" id="dateBadge">📅 載入日期中…</div>
-        <button type="button" class="btn" id="soundButton" title="啟用鬧鐘聲響（瀏覽器需要先點擊授權）">🔕 開啟鬧鐘聲音</button>
+        <button type="button" class="btn" id="soundButton" title="先點一下解鎖電子白板音效">🔕 啟用鬧鐘聲音</button>
+        <span class="sound-status" id="soundStatus" role="status" aria-live="polite">⚠️ 鈴聲未啟用</span>
+        <button type="button" class="btn" id="soundModeButton" title="如果電子白板沒有聲音，請按此切換到另一種播放模式">🔄 切換音效</button>
         <button type="button" class="btn" id="testButton" title="試聽鬧鐘鈴聲">🎵 試聽</button>
         <button type="button" class="btn" id="fullscreenButton">⛶ 全螢幕</button>
       </div>
@@ -710,6 +748,7 @@
       <div class="popup-kicker" id="popupKicker">🔔 午餐時間提醒！</div>
       <h2 id="popupTitle">刷牙、漱口、整理桌面</h2>
       <p id="popupDescription">完成任務後，按下方按鈕關閉提醒 💖</p>
+      <button type="button" class="sound-retry" id="retrySound" hidden>🔊 點我啟用鬧鐘鈴聲</button>
       <button class="dismiss-btn" type="button" id="dismissAlarm">好！我知道了 💖</button>
     </div>
   </div>
@@ -965,63 +1004,170 @@
         }
       }
     });
+
+    // 電子白板音效：Web Audio 優先，內建瀏覽器不支援時可改用 WAV/HTMLAudio。
+    // 瀏覽器限制未經使用者操作的音效，因此首次需點一次「啟用」或「全螢幕」。
+    let compatibleAudio = null;
+    let soundBackend = 'webaudio'; // webaudio / htmlaudio
+    let screenWakeLock = null;
     function makeAudio() {
       const AudioCtor = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtor) { toast('目前的瀏覽器不支援音效，但畫面提醒仍可正常使用'); return null; }
-      try { if (!audioContext) audioContext = new AudioCtor(); return audioContext; }
-      catch { toast('無法啟動聲音，請檢查裝置或瀏覽器設定'); return null; }
+      if (!AudioCtor) return null;
+      try {
+        if (!audioContext || audioContext.state === 'closed') audioContext = new AudioCtor();
+        return audioContext;
+      } catch { return null; }
     }
-    function chime() {
-      if (!soundOn || !audioContext || audioContext.state !== 'running') return;
-      const start = audioContext.currentTime + .02;
-      const notes = [784, 988, 1175, 988, 880, 1175];
-      notes.forEach((freq, i)=>{
-        const t = start + i*.25;
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(freq,t);
-        gain.gain.setValueAtTime(.0001,t);
-        gain.gain.exponentialRampToValueAtTime(.12,t+.025);
-        gain.gain.exponentialRampToValueAtTime(.0001,t+.2);
-        oscillator.connect(gain); gain.connect(audioContext.destination);
-        oscillator.start(t); oscillator.stop(t+.23);
-      });
+    function makeWavUrl() {
+      // 純本機產生 WAV 鈴聲，不需要網路檔案或額外下載。
+      const rate = 22050, notes = [784, 988, 1175, 988, 880, 1175], slot = .245;
+      const count = Math.ceil(rate * (slot * notes.length + .12));
+      const bytes = new ArrayBuffer(44 + count * 2);
+      const view = new DataView(bytes);
+      const put = (offset, word) => { for (let i = 0; i < word.length; i++) view.setUint8(offset+i, word.charCodeAt(i)); };
+      put(0,'RIFF'); view.setUint32(4,36+count*2,true);
+      put(8,'WAVE'); put(12,'fmt '); view.setUint32(16,16,true);
+      view.setUint16(20,1,true); view.setUint16(22,1,true);
+      view.setUint32(24,rate,true); view.setUint32(28,rate*2,true);
+      view.setUint16(32,2,true); view.setUint16(34,16,true);
+      put(36,'data'); view.setUint32(40,count*2,true);
+      for(let i=0;i<count;i++){
+        const t=i/rate, n=Math.floor(t/slot), local=t-n*slot;
+        const freq=notes[Math.min(notes.length-1,n)];
+        const env=n>=notes.length ? 0 : Math.max(0,Math.min(1,local/.018,(slot-local)/.075));
+        const x=(.75*Math.sin(2*Math.PI*freq*t)+.19*Math.sin(4*Math.PI*freq*t))*env*.8;
+        view.setInt16(44+i*2,Math.round(Math.max(-1,Math.min(1,x))*32760),true);
+      }
+      return URL.createObjectURL(new Blob([bytes],{type:'audio/wav'}));
+    }
+    function htmlAudio() {
+      if (!compatibleAudio) {
+        compatibleAudio = new Audio(makeWavUrl());
+        compatibleAudio.preload = 'auto';
+        compatibleAudio.volume = 1;
+      }
+      return compatibleAudio;
+    }
+    function syncSoundUI() {
+      $('soundButton').classList.toggle('sound-ready', soundOn);
+      $('soundButton').textContent = soundOn ? '🔊 鬧鐘鈴聲已啟用' : '🔕 啟用鬧鐘聲音';
+      $('soundStatus').classList.toggle('ready', soundOn);
+      $('soundStatus').textContent = soundOn ? '✅ 鈴聲已啟用' : '⚠️ 鈴聲未啟用';
+      $('soundTip').textContent = soundOn
+        ? '✅ 已啟用鬧鐘鈴聲。若試聽仍無聲，請檢查電子白板喇叭、音量及系統輸出，或按「切換音效」。請保持畫面開啟。'
+        : '🔊 請先按「啟用鬧鐘聲音」並確認試聽有聲；也可按「全螢幕」嘗試自動解鎖。若白板仍無聲，請按「切換音效」試用相容模式。';
+      if (popupOpen) $('retrySound').hidden = soundOn;
+    }
+    function blockedAudio() {
+      soundOn = false;
+      syncSoundUI();
+      if (popupOpen) {
+        $('popupDescription').textContent = '⚠️ 瀏覽器尚未允許聲音！請按下方「啟用鈴聲」，並確認電子白板音量。';
+      }
+      toast('⚠️ 音效遭瀏覽器阻擋，請按啟用聲音或切換音效');
+    }
+    async function chime() {
+      if (!soundOn) return false;
+      if (soundBackend === 'htmlaudio') {
+        try {
+          const a=htmlAudio();
+          a.pause(); a.currentTime=0;
+          await a.play();
+          return true;
+        } catch { blockedAudio(); return false; }
+      }
+      const ctx=makeAudio();
+      if (!ctx) { blockedAudio(); return false; }
+      try {
+        if (ctx.state !== 'running') await ctx.resume();
+        if (ctx.state !== 'running') throw new Error('音效未解鎖');
+        const start = ctx.currentTime + .02;
+        const notes = [784, 988, 1175, 988, 880, 1175];
+        notes.forEach((freq,i)=>{
+          const t=start+i*.25;
+          const o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='triangle';
+          o.frequency.setValueAtTime(freq,t);
+          g.gain.setValueAtTime(.0001,t);
+          g.gain.exponentialRampToValueAtTime(.23,t+.025);
+          g.gain.exponentialRampToValueAtTime(.0001,t+.23);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(t); o.stop(t+.24);
+        });
+        return true;
+      } catch { blockedAudio(); return false; }
+    }
+    async function activateSound(forceBackend) {
+      if (forceBackend) soundBackend=forceBackend;
+      if (soundBackend === 'webaudio') {
+        const ctx=makeAudio();
+        if (ctx) {
+          try {
+            await ctx.resume();
+            if (ctx.state === 'running') {
+              soundOn=true; syncSoundUI();
+              await chime();
+              toast('🎶 鈴聲已啟用並播放試聽，請確認是否聽得到！');
+              return true;
+            }
+          } catch { /* 改試 HTMLAudio */ }
+        }
+        soundBackend='htmlaudio';
+      }
+      try {
+        // 必須由實際點擊直接觸發，避免電子白板瀏覽器拒絕播放。
+        const a=htmlAudio();
+        a.pause(); a.currentTime=0;
+        await a.play();
+        soundOn=true; syncSoundUI();
+        toast('🎶 相容鈴聲模式已啟用，請確認是否聽得到！');
+        return true;
+      } catch {
+        blockedAudio();
+        return false;
+      }
     }
     async function soundButtonClicked() {
       if (soundOn) {
-        soundOn=false; stopMelody(); $('soundButton').classList.remove('sound-ready');
-        $('soundButton').textContent='🔕 開啟鬧鐘聲音';
-        $('soundTip').textContent='🔕 鬧鐘聲音已關閉；到時間仍會跳出大畫面提醒。請保持頁面開啟、避免裝置休眠。';
-        toast('🔕 已關閉鬧鐘聲音'); return;
+        soundOn=false; stopMelody(); syncSoundUI();
+        toast('🔕 已關閉鬧鐘鈴聲（畫面提醒仍保留）');
+        return;
       }
-      const ctx = makeAudio(); if (!ctx) return;
-      try { await ctx.resume(); soundOn=ctx.state==='running'; }
-      catch { soundOn=false; }
-      if (!soundOn) { toast('聲音未啟動，請先解除裝置靜音或允許音訊'); return; }
-      $('soundButton').classList.add('sound-ready'); $('soundButton').textContent='🔊 鈴聲已開啟';
-      $('soundTip').textContent='✅ 聲音已啟用！12:35 與 12:38 到時會有畫面提醒和可愛鈴聲（時間可在上方修改）。請讓頁面保持開啟，避免裝置休眠。';
-      chime(); toast('🎶 鬧鐘鈴聲已開啟，剛剛是試聽音效！');
+      await activateSound();
     }
     async function testSound() {
-      const ctx=makeAudio(); if (!ctx) return;
-      try { await ctx.resume(); } catch {}
-      if (ctx.state !== 'running') { toast('試聽失敗，請確認瀏覽器音效權限'); return; }
-      const previouslyOn = soundOn; soundOn=true; chime(); soundOn=previouslyOn;
-      toast('🎵 正在播放鈴聲試聽～');
+      if (!soundOn) {
+        await activateSound();
+      } else {
+        await chime();
+        toast('🎵 正在試聽鈴聲；若無聲請切換音效模式');
+      }
     }
     function stopMelody() {
       if (melodyInterval) clearInterval(melodyInterval);
       if (melodyTimeout) clearTimeout(melodyTimeout);
       melodyInterval=null; melodyTimeout=null;
+      if (compatibleAudio) {
+        compatibleAudio.pause();
+        try { compatibleAudio.currentTime=0; } catch {}
+      }
     }
     function startMelody() {
       stopMelody();
-      if (!soundOn) return;
-      if (audioContext?.state === 'suspended') audioContext.resume().then(chime).catch(()=>{});
-      else chime();
-      melodyInterval=setInterval(chime, 2250);
-      melodyTimeout=setTimeout(stopMelody, 30000);
+      if (!soundOn) {
+        $('retrySound').hidden=false;
+        return;
+      }
+      void chime();
+      melodyInterval=setInterval(()=>{ if (soundOn) void chime(); }, 2100);
+      melodyTimeout=setTimeout(stopMelody,30000);
     }
+    async function keepScreenAwake() {
+      if (!document.fullscreenElement || document.hidden || !navigator.wakeLock?.request) return;
+      try { if (!screenWakeLock || screenWakeLock.released) screenWakeLock=await navigator.wakeLock.request('screen'); }
+      catch { /* 某些電子白板不支援；不影響其他功能。 */ }
+    }
+
     function showNextAlarm() {
       if (!alertQueue.length) return;
       popupOpen = true;
@@ -1030,7 +1176,8 @@
       $('popupIcon').textContent=info.icon;
       $('popupKicker').textContent=`🔔 ${alarms[idx].time} ${idx===0?'第一聲':'第二聲'}提醒！`;
       $('popupTitle').textContent=alarmInstructions[idx];
-      $('popupDescription').textContent='完成任務後，按下方按鈕關閉提醒 💖';
+      $('popupDescription').textContent=soundOn ? '完成任務後，按下方按鈕關閉提醒 💖' : '⚠️ 鈴聲未啟用！請按下方「啟用鈴聲」並確認有聲音。';
+      $('retrySound').hidden=soundOn;
       $('alarmOverlay').classList.toggle('mint',info.theme==='mint');
       $('alarmOverlay').classList.add('show');
       $('alarmOverlay').setAttribute('aria-hidden','false');
@@ -1046,6 +1193,7 @@
     }
 
     // 初始載入
+    syncSoundUI();
     renderSchedule(); renderAlarms(); renderPromises(); persist();
     alarms.forEach((_,i)=>scheduleAlarm(i));
     tick();
@@ -1078,10 +1226,22 @@
     });
     $('soundButton').addEventListener('click',soundButtonClicked);
     $('testButton').addEventListener('click',testSound);
+    $('soundModeButton').addEventListener('click',()=>{
+      const next=soundBackend==='webaudio'?'htmlaudio':'webaudio';
+      soundOn=false; stopMelody(); syncSoundUI();
+      void activateSound(next);
+    });
+    $('retrySound').addEventListener('click',async()=>{
+      if(!soundOn) await activateSound();
+      $('retrySound').hidden=soundOn;
+      if(soundOn && popupOpen) startMelody();
+    });
     $('dismissAlarm').addEventListener('click',dismissAlarm);
     $('fullscreenButton').addEventListener('click', async ()=>{
       try {
         if (!document.fullscreenElement) {
+          // 使用「全螢幕」點擊的互動權限一併解鎖鬧鐘聲音。
+          if (!soundOn) void activateSound();
           await document.documentElement.requestFullscreen();
           $('fullscreenButton').textContent='⛶ 離開全螢幕';
         } else {
@@ -1092,9 +1252,19 @@
     });
     document.addEventListener('fullscreenchange',()=>{
       $('fullscreenButton').textContent=document.fullscreenElement?'⛶ 離開全螢幕':'⛶ 全螢幕';
+      if (document.fullscreenElement) void keepScreenAwake();
+      else if(screenWakeLock){ screenWakeLock.release().catch(()=>{}); screenWakeLock=null; }
     });
     // 頁面從背景回到前景時，立即更新時間與提醒。
-    document.addEventListener('visibilitychange',()=>{ if (!document.hidden) tick(); });
+    document.addEventListener('visibilitychange',()=>{
+      if (!document.hidden) {
+        tick();
+        if(document.fullscreenElement) void keepScreenAwake();
+        if(soundOn && audioContext && soundBackend==='webaudio' && audioContext.state!=='running') {
+          void audioContext.resume().catch(()=>{});
+        }
+      }
+    });
   </script>
 </body>
 </html>
