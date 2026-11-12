@@ -631,6 +631,46 @@
     html:fullscreen .sound-status { padding: 5px 9px; font-size: 12px; }
     html:fullscreen #soundModeButton { padding: 6px 9px; font-size: 12px; }
 
+  
+    /* 飯糰插圖升級：右上角插圖 3 倍尺寸，保留時鐘前景可讀性 */
+    .clock-card .clock-intro {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      isolation: isolate;
+    }
+    .clock-card .clock-intro > div { position: relative; z-index: 3; }
+    .clock-card .clock-intro .mascot {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: clamp(336px, 27.9vw, 510px); /* 原來 112~170px，現在正好 3 倍 */
+      max-width: none;
+      height: auto;
+      margin: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: .95;
+    }
+    .clock-card .time-area { position: relative; z-index: 3; }
+    @media (max-width: 680px) {
+      .clock-card .clock-intro .mascot { width: min(60vw, 270px); /* 20vw~90px 的 3 倍 */ }
+    }
+    @media (max-width: 360px) {
+      .clock-card .clock-intro .mascot { width: min(60vw, 270px); }
+    }
+    html:fullscreen .clock-card .clock-intro .mascot {
+      width: clamp(195px, 18vw, 300px); /* 全螢幕 65~100px 的 3 倍 */
+      right: 0;
+      top: 0;
+    }
+    @media (max-height: 730px) {
+      html:fullscreen .clock-card .clock-intro .mascot { width: 180px; }
+    }
+    @media (max-width: 680px) {
+      html:fullscreen .clock-card .clock-intro .mascot { width: 192px; }
+    }
+
   </style>
 </head>
 <body>
