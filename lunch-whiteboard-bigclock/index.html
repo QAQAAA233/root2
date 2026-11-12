@@ -632,43 +632,73 @@
     html:fullscreen #soundModeButton { padding: 6px 9px; font-size: 12px; }
 
   
-    /* 飯糰插圖升級：右上角插圖 3 倍尺寸，保留時鐘前景可讀性 */
+    /* 飯糰插圖調整為原始尺寸約 2 倍；為飯糰保留專屬上方空間，絕不壓到時間數字 */
+    .clock-card {
+      min-height: max(1090px, 115vh);
+    }
     .clock-card .clock-intro {
       position: relative;
-      z-index: 2;
-      width: 100%;
       isolation: isolate;
+      width: 100%;
+      height: clamp(224px, 18.6vw, 340px);
+      min-height: clamp(224px, 18.6vw, 340px);
+      flex: 0 0 auto;
+      z-index: 2;
     }
-    .clock-card .clock-intro > div { position: relative; z-index: 3; }
+    .clock-card .clock-intro > div { position: relative; z-index: 2; }
     .clock-card .clock-intro .mascot {
       position: absolute;
-      right: 0;
       top: 0;
-      width: clamp(336px, 27.9vw, 510px); /* 原來 112~170px，現在正好 3 倍 */
+      right: 0;
+      width: clamp(224px, 18.6vw, 340px);
       max-width: none;
       height: auto;
       margin: 0;
-      z-index: 1;
       pointer-events: none;
-      opacity: .95;
+      z-index: 1;
+      opacity: 1;
     }
-    .clock-card .time-area { position: relative; z-index: 3; }
+    .clock-card .time-area {
+      position: relative;
+      z-index: 3;
+    }
     @media (max-width: 680px) {
-      .clock-card .clock-intro .mascot { width: min(60vw, 270px); /* 20vw~90px 的 3 倍 */ }
+      .clock-card { min-height: max(550px, 82vh); }
+      .clock-card .clock-intro {
+        height: min(40vw, 180px);
+        min-height: min(40vw, 180px);
+      }
+      .clock-card .clock-intro .mascot { width: min(40vw, 180px); }
     }
-    @media (max-width: 360px) {
-      .clock-card .clock-intro .mascot { width: min(60vw, 270px); }
+    html:fullscreen .clock-card .clock-intro {
+      height: clamp(130px, 12vw, 200px);
+      min-height: clamp(130px, 12vw, 200px);
+      flex: 0 0 auto;
     }
     html:fullscreen .clock-card .clock-intro .mascot {
-      width: clamp(195px, 18vw, 300px); /* 全螢幕 65~100px 的 3 倍 */
       right: 0;
       top: 0;
+      width: clamp(130px, 12vw, 200px);
+    }
+    /* 全螢幕維持超大時鐘，也讓下方雙鬧鐘完整出現在可視區域 */
+    html:fullscreen .time {
+      font-size: min(33vw, calc(70vh - 220px));
     }
     @media (max-height: 730px) {
-      html:fullscreen .clock-card .clock-intro .mascot { width: 180px; }
+      html:fullscreen .clock-card .clock-intro {
+        height: 120px;
+        min-height: 120px;
+      }
+      html:fullscreen .clock-card .clock-intro .mascot { width: 120px; }
+      html:fullscreen .time { font-size: min(33vw, calc(70vh - 175px)); }
     }
     @media (max-width: 680px) {
-      html:fullscreen .clock-card .clock-intro .mascot { width: 192px; }
+      html:fullscreen .clock-card .clock-intro {
+        height: 128px;
+        min-height: 128px;
+      }
+      html:fullscreen .clock-card .clock-intro .mascot { width: 128px; }
+      html:fullscreen .time { font-size: min(33vw, calc(70vh - 180px)); }
     }
 
   </style>
